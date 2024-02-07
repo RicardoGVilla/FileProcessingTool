@@ -5,24 +5,19 @@ import PyPDF2
 
 
 #allows user to upload files 
-def upload_file(file_path=None, export_instructions_selected=None):
+def upload_file():
     # Reading pdf files 
-
+    global file_path, export_instructions_selected
     if file_path is None and export_instructions_selected is None:
         file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
-        return
-        
-    if file_path and not export_instructions_selected:
-        get_export_instructions()
-    compare_documents(file_path,get_export_instructions)
+        return    
+    if file_path and export_instructions_selected is None:
+        export_instructions_selected = get_export_instructions()
 
-        
 
 def get_export_instructions():
-        export_instructions_selected = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
+        return filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
        
-
-
 
     
 def print_pdf(file_path):
@@ -71,8 +66,8 @@ file_path = None
 export_instructions_selected = None
 
 # Create UI elements to upload and compare documents 
-upload_button = tk.Button(root, text="Upload Document", command=lambda: upload_file(file_path, export_instructions_selected))
-export_instructions = tk.Button(root, text="Upload Export Instructions", command=lambda: upload_file(file_path, export_instructions_selected))
+upload_button = tk.Button(root, text="Upload Document", command=upload_file)
+export_instructions = tk.Button(root, text="Upload Export Instructions", command=upload_file)
 purchase_order_label = tk.Label(root, text="Enter Purchase Order:")
 purchase_order_entry = tk.Entry(root)
 compare_button = tk.Button(root, text="Compare Documents", command=lambda: compare_documents(file_path, export_instructions_selected))
