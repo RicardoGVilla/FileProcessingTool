@@ -3,41 +3,25 @@ from tkinter import filedialog
 import docx
 import PyPDF2
 
-global export_instructions_selected = False
-
 
 #allows user to upload files 
-def upload_file():
+def upload_file(file_path=None, export_instructions_selected=None):
     # Reading pdf files 
-    global file_path = False
 
-    if not file_path:
+    if file_path is None and export_instructions_selected is None:
         file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
+        return
         
-        if file_path and export_instructions_selected:
-            compare_documents(file_path, export_instructions)
+    if file_path and not export_instructions_selected:
+        get_export_instructions()
+    compare_documents(file_path,get_export_instructions)
 
         
 
 def get_export_instructions():
-    file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
-    if file_path: 
-        print(f"Selected File: {file_path}")
-        if file_path.lower().endswith(".pdf"):
-            print_pdf(file_path)
-        elif file_path.lower().endswith(".docx"):
-            print_word(file_path)
-    upload_file()
+        export_instructions_selected = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
+       
 
-
-
-    """
-    
-    """
-    """
-    We clean the text 
-    We store it 
-    """
 
 
     
@@ -82,12 +66,16 @@ def compare_documents(document, export_instructions):
 root = tk.Tk()
 root.title("Label Approval Tool")
 
+# Initialize variables
+file_path = None
+export_instructions_selected = None
+
 # Create UI elements to upload and compare documents 
-upload_button = tk.Button(root, text="Upload Document", command=upload_file)
-export_instructions = tk.Button(root, text="Upload Export Instructions", command=get_export_instructions)
+upload_button = tk.Button(root, text="Upload Document", command=lambda: upload_file(file_path, export_instructions_selected))
+export_instructions = tk.Button(root, text="Upload Export Instructions", command=lambda: upload_file(file_path, export_instructions_selected))
 purchase_order_label = tk.Label(root, text="Enter Purchase Order:")
 purchase_order_entry = tk.Entry(root)
-compare_button = tk.Button(root, text="Compare Documents", command=compare_documents)
+compare_button = tk.Button(root, text="Compare Documents", command=lambda: compare_documents(file_path, export_instructions_selected))
 
 # Place UI elements using grid
 upload_button.grid(row=0, column=0)
