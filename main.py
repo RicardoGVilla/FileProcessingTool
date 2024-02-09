@@ -3,33 +3,37 @@ from tkinter import filedialog
 import docx
 import PyPDF2
 
+# Initialize variables
+file_path = None
+export_instructions_selected = None
+producer_input = None
+product_input = None 
 
-#allows user to upload files 
+# Function to upload files
 def upload_file():
-    # Reading pdf files 
-    global file_path, export_instructions_selected
+    global file_path, export_instructions_selected, producer_input, product_input, export_instructions
+
     if file_path is None and export_instructions_selected is None:
         file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
-        return    
-    if file_path and export_instructions_selected is None:
+    elif file_path and export_instructions_selected is None:
         export_instructions_selected = get_export_instructions()
 
+        
 
+# Function to get export instructions
 def get_export_instructions():
-        return filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
-       
+    return filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
 
-    
+# Function to print PDF content
 def print_pdf(file_path):
     pdf_reader = PyPDF2.PdfReader(file_path)
-    
     for page_num in range(len(pdf_reader.pages)):
         page = pdf_reader.pages[page_num]
         for line in page.extract_text().split('\n'):
             if line.strip():
                 print(line)
 
-
+# Function to print Word content
 def print_word(file_path):
     word_read = docx.Document(file_path)
     for paragraph in word_read.paragraphs:
@@ -37,46 +41,63 @@ def print_word(file_path):
         if text:
             print(text)
 
-def compare_documents(document, export_instructions):
-    print("Hello from compare documents")
-    # print(f"Selected File: {file_path}")
-    #     if file_path.lower().endswith(".pdf"):
-    #         print_pdf(file_path)
-    #     elif file_path.lower().endswith(".docx"):
-    #         print_word(file_path)
+# Function to compare documents
+def compare_documents():
+    global export_instructions_selected
+    
+    print(producer_input)
+    print(producer_input)
+    
+    if export_instructions["product"] == product_input and export_instructions["producer"] == producer_input:
+        print("Hello from compare documents")
+    else: 
+        response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
+        if response:
+            get_export_instructions()  # If user wants to upload export instructions, call the function to do so
 
 
-    """
-    We identify the type of file it is 
-    We look for other documents that possesses that specific reference number
-    if not found we ask the user for export instructions 
-    We save the export instruction, proceed approving the doc.  
-    If found we compare each of the fields against each other 
-    If corret we print document is approved and we save it 
-    If not correct we return where those files are wrong and ask for amendment
-    Once amended, the file, if approved, will be stored for future references 
-    """
 
 # Create the main window with tkinter
 root = tk.Tk()
 root.title("Label Approval Tool")
 
-# Initialize variables
-file_path = None
-export_instructions_selected = None
+# Function to select producer
+def select_producer(supplier):
+    global producer_input
+    producer_input = supplier
+    print("now you have a producer:", producer_input)
+
+# Function to select product
+def select_product(item):
+    global product_input
+    product_input = item 
+    print("now you have an item:", product_input)
+
+# Function to enable the export instructions button
+def enable_export_instructions_button():
+    global export_instructions_button
+    export_instructions_button.config(state=tk.NORMAL)
+
 
 # Create UI elements to upload and compare documents 
 upload_button = tk.Button(root, text="Upload Document", command=upload_file)
-export_instructions = tk.Button(root, text="Upload Export Instructions", command=upload_file)
-purchase_order_label = tk.Label(root, text="Enter Purchase Order:")
-purchase_order_entry = tk.Entry(root)
-compare_button = tk.Button(root, text="Compare Documents", command=lambda: compare_documents(file_path, export_instructions_selected))
+export_instructions_button = tk.Button(root, text="Upload Export Instructions", command=get_export_instructions, state=tk.DISABLED)
+producers = ['Producer 1', 'Producer 2', 'Producer 3']  
+products = ['Product A', 'Product B', 'Product C']  
+export_instructions = { "product":'Product B', "producer":'Producer 2'}
+producer_var = tk.StringVar(root)
+producer_var.set(producers[0])
+product_var = tk.StringVar(root)
+product_var.set(products[0])
+producer_dropdown = tk.OptionMenu(root, producer_var, *producers, command=select_producer)
+product_dropdown = tk.OptionMenu(root, product_var, *products, command=select_product)
+compare_button = tk.Button(root, text="Compare Documents", command=lambda: compare_documents())
 
 # Place UI elements using grid
 upload_button.grid(row=0, column=0)
-export_instructions.grid(row=1, column=0)
-purchase_order_label.grid(row=2, column=0)
-purchase_order_entry.grid(row=2, column=1)
+export_instructions_button.grid(row=1, column=0)
+producer_dropdown.grid(row=2, column=0)
+product_dropdown.grid(row=2, column=1)
 compare_button.grid(row=3, column=0)
 
 # Start the Tkinter main loop
