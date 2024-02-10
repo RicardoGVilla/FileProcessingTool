@@ -15,14 +15,70 @@ def upload_file():
 
     if file_path is None and export_instructions_selected is None:
         file_path = filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
+        process_document(file_path)
     elif file_path and export_instructions_selected is None:
         export_instructions_selected = get_export_instructions()
-
         
 
 # Function to get export instructions
 def get_export_instructions():
-    return filedialog.askopenfilename(filetypes=[("PDF Files", "*.pdf"), ("Word Files", "*.docx")])
+    global export_instructions_selected, export_info
+    export_instructions_selected = filedialog.askopenfilename(filetypes=[("Word Files", "*.docx")])
+    process_export_instructions(export_instructions_selected)
+
+
+def process_document(file):
+    global file_path
+    pdf_doc = PyPDF2.PdfReader(file)
+    counter = 0 
+    file_path = {}
+    key = None
+    value_buffer = ''
+    for page_num in range(len(pdf_doc.pages)):
+        page = pdf_doc.pages[page_num]
+        for line in page.extract_text().split('\n'):
+            if ":" in line:
+                if key: 
+                    file_path[key] = value_buffer.strip()
+                    value_buffer = ''  
+                key, value = line.split(":", 1)
+                key = key.strip()
+                value_buffer = value.strip()  
+                counter += 1
+            else:
+                value_buffer = value_buffer + ' ' + line.strip()
+    if key:
+        file_path[key] = value_buffer.strip()
+    print(file_path)
+
+
+def process_export_instructions(instruction_text):
+    word_doc = docx.Document(instruction_text)
+
+    key_mapping = {
+        "Product": "product",
+        "Country of Origin": "country",
+        "Producer": "producer",
+        "Importer": "importer",
+        "Lot Number": "lot"
+    }
+    
+    export_info = {}
+    counter = 0 
+    for paragraph in word_doc.paragraphs:
+        for line in paragraph.text.split('\n'): 
+            counter = counter + 1
+            if ":" in line:
+                key, value = line.split(":", 1)
+                key = key.strip()
+                if key in key_mapping:
+                    export_info[key_mapping[key]] = value.strip()
+
+    print(export_info)
+    print(file_path)
+    return export_info
+
+
 
 # Function to print PDF content
 def print_pdf(file_path):
@@ -43,19 +99,16 @@ def print_word(file_path):
 
 # Function to compare documents
 def compare_documents():
-    global export_instructions_selected
     
-    print(producer_input)
-    print(producer_input)
-    
-    if export_instructions["product"] == product_input and export_instructions["producer"] == producer_input:
-        print("Hello from compare documents")
+    if export_instructions:
+        if export_instructions["product"] == product_input and export_instructions["producer"] == producer_input:
+            print("Hello from compare documents")
     else: 
         response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
         if response:
-            get_export_instructions()  # If user wants to upload export instructions, call the function to do so
+                get_export_instructions()  
 
-
+    
 
 # Create the main window with tkinter
 root = tk.Tk()
@@ -84,7 +137,7 @@ upload_button = tk.Button(root, text="Upload Document", command=upload_file)
 export_instructions_button = tk.Button(root, text="Upload Export Instructions", command=get_export_instructions, state=tk.DISABLED)
 producers = ['Producer 1', 'Producer 2', 'Producer 3']  
 products = ['Product A', 'Product B', 'Product C']  
-export_instructions = { "product":'Product B', "producer":'Producer 2'}
+export_instructions = {}
 producer_var = tk.StringVar(root)
 producer_var.set(producers[0])
 product_var = tk.StringVar(root)
