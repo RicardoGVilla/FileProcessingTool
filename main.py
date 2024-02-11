@@ -49,10 +49,10 @@ def process_document(file):
                 value_buffer = value_buffer + ' ' + line.strip()
     if key:
         file_path[key] = value_buffer.strip()
-    print(file_path)
 
 
 def process_export_instructions(instruction_text):
+    global export_info, file_path
     word_doc = docx.Document(instruction_text)
 
     key_mapping = {
@@ -74,8 +74,6 @@ def process_export_instructions(instruction_text):
                 if key in key_mapping:
                     export_info[key_mapping[key]] = value.strip()
 
-    print(export_info)
-    print(file_path)
     return export_info
 
 
@@ -99,14 +97,18 @@ def print_word(file_path):
 
 # Function to compare documents
 def compare_documents():
-    
+    global export_info, file_path
+
     if export_instructions:
         if export_instructions["product"] == product_input and export_instructions["producer"] == producer_input:
             print("Hello from compare documents")
     else: 
         response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
         if response:
-                get_export_instructions()  
+            get_export_instructions()
+    ##add logic is label approved or not? 
+    print(export_info)
+    print(file_path)
 
     
 
