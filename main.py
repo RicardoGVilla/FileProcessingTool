@@ -8,6 +8,8 @@ file_path = None
 export_instructions_selected = None
 producer_input = None
 product_input = None 
+export_info = {}
+
 
 # Function to upload files
 def upload_file():
@@ -63,7 +65,6 @@ def process_export_instructions(instruction_text):
         "Lot Number": "lot"
     }
     
-    export_info = {}
     counter = 0 
     for paragraph in word_doc.paragraphs:
         for line in paragraph.text.split('\n'): 
@@ -99,16 +100,19 @@ def print_word(file_path):
 def compare_documents():
     global export_info, file_path
 
-    if export_instructions:
-        if export_instructions["product"] == product_input and export_instructions["producer"] == producer_input:
-            print("Hello from compare documents")
+    if export_info:
+        if (export_info.get("product") == file_path.get("product") and
+            export_info.get("producer") == file_path.get("producer") and
+            export_info.get("country") == file_path.get("country") and
+            export_info.get("lot") == file_path.get("lot")):
+            print("Export label matches export instructions.")
+        else:
+            print("Export label does not match export instructions.")
     else: 
         response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
         if response:
             get_export_instructions()
-    ##add logic is label approved or not? 
-    print(export_info)
-    print(file_path)
+
 
     
 
