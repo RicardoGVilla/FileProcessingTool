@@ -101,20 +101,32 @@ def compare_documents():
     global export_info, file_path
 
     if export_info:
-        if (export_info.get("product") == file_path.get("product") and
-            export_info.get("producer") == file_path.get("producer") and
-            export_info.get("country") == file_path.get("country") and
-            export_info.get("lot") == file_path.get("lot")):
-            print("Export label matches export instructions.")
-        else:
-            print("Export label does not match export instructions.")
+        print(export_info)
+        print(file_path)
+        
+        match_found = False
+        
+        for export_key, export_value in export_info.items():
+            match_found = False  # Reset match_found for each export key
+            for file_key, file_value in file_path.items():
+                if export_key.lower() in file_key.lower():
+                    match_found = True
+                    if export_value == file_value:
+                        print(f"Key '{export_key}' matches with value '{export_value}' in both documents.")
+                    else:
+                        print(f"Key '{export_key}' matches but values do not match: Export Info: '{export_value}', File Path: '{file_value}'")
+                    break  # Once a match is found, no need to continue checking for this export_key
+            
+            if not match_found:
+                print(f"No matching key found for '{export_key}' between export label and export instructions.")
+                
+        if not match_found:
+            print("No matching key found between export label and export instructions.")
     else: 
         response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
         if response:
             get_export_instructions()
 
-
-    
 
 # Create the main window with tkinter
 root = tk.Tk()
