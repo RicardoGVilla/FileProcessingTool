@@ -41,7 +41,7 @@ def process_document(file):
         for line in page.extract_text().split('\n'):
             if ":" in line:
                 if key: 
-                    file_path[key] = value_buffer.strip()
+                    file_path[key] = ' '.join(value_buffer.split()) 
                     value_buffer = ''  
                 key, value = line.split(":", 1)
                 key = key.strip()
@@ -50,7 +50,8 @@ def process_document(file):
             else:
                 value_buffer = value_buffer + ' ' + line.strip()
     if key:
-        file_path[key] = value_buffer.strip()
+        file_path[key] = ' '.join(value_buffer.split())  
+
 
 
 def process_export_instructions(instruction_text):
@@ -59,7 +60,6 @@ def process_export_instructions(instruction_text):
 
     key_mapping = {
         "Product": "product",
-        "Country of Origin": "country",
         "Producer": "producer",
         "Importer": "importer",
         "Lot Number": "lot"
@@ -97,6 +97,7 @@ def print_word(file_path):
             print(text)
 
 # Function to compare documents
+# Function to compare documents
 def compare_documents():
     global export_info, file_path
 
@@ -104,18 +105,20 @@ def compare_documents():
         print(export_info)
         print(file_path)
         
-        match_found = False
-        
         for export_key, export_value in export_info.items():
             match_found = False  # Reset match_found for each export key
             for file_key, file_value in file_path.items():
+                # Normalize whitespace for comparison
+                normalized_export_value = ' '.join(export_value.split())
+                normalized_file_value = ' '.join(file_value.split())
+                
                 if export_key.lower() in file_key.lower():
                     match_found = True
-                    if export_value == file_value:
+                    if normalized_export_value == normalized_file_value:
                         print(f"Key '{export_key}' matches with value '{export_value}' in both documents.")
                     else:
                         print(f"Key '{export_key}' matches but values do not match: Export Info: '{export_value}', File Path: '{file_value}'")
-                    break  # Once a match is found, no need to continue checking for this export_key
+                    break  
             
             if not match_found:
                 print(f"No matching key found for '{export_key}' between export label and export instructions.")
@@ -126,6 +129,13 @@ def compare_documents():
         response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
         if response:
             get_export_instructions()
+
+
+def normalize_text(text):
+    text = text.replace(" - ", "-")
+    text = ' '.join(text.split())
+    return text
+
 
 
 # Create the main window with tkinter
