@@ -64,7 +64,6 @@ def process_export_instructions(instruction_text):
         "Importer": "importer",
         "Lot Number": "lot"
     }
-    
     counter = 0 
     for paragraph in word_doc.paragraphs:
         for line in paragraph.text.split('\n'): 
