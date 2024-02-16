@@ -79,13 +79,13 @@ def process_export_instructions(instruction_text):
 
 
 # Function to print PDF content
-def print_pdf(file_path):
-    pdf_reader = PyPDF2.PdfReader(file_path)
-    for page_num in range(len(pdf_reader.pages)):
-        page = pdf_reader.pages[page_num]
-        for line in page.extract_text().split('\n'):
-            if line.strip():
-                print(line)
+# def print_pdf(file_path):
+#     pdf_reader = PyPDF2.PdfReader(file_path)
+#     for page_num in range(len(pdf_reader.pages)):
+#         page = pdf_reader.pages[page_num]
+#         for line in page.extract_text().split('\n'):
+#             if line.strip():
+#                 print(line)
 
 # Function to print Word content
 def print_word(file_path):
@@ -95,7 +95,6 @@ def print_word(file_path):
         if text:
             print(text)
 
-# Function to compare documents
 # Function to compare documents
 def compare_documents():
     global export_info, file_path
