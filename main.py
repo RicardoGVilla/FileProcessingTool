@@ -10,7 +10,6 @@ producer_input = None
 product_input = None 
 export_info = {}
 
-
 # Function to upload files
 def upload_file():
     global file_path, export_instructions_selected, producer_input, product_input, export_instructions
@@ -20,7 +19,6 @@ def upload_file():
         process_document(file_path)
     elif file_path and export_instructions_selected is None:
         export_instructions_selected = get_export_instructions()
-        
 
 # Function to get export instructions
 def get_export_instructions():
@@ -28,11 +26,10 @@ def get_export_instructions():
     export_instructions_selected = filedialog.askopenfilename(filetypes=[("Word Files", "*.docx")])
     process_export_instructions(export_instructions_selected)
 
-
 def process_document(file):
     global file_path
     pdf_doc = PyPDF2.PdfReader(file)
-    counter = 0 
+    counter = 0
     file_path = {}
     key = None
     value_buffer = ''
@@ -40,19 +37,19 @@ def process_document(file):
         page = pdf_doc.pages[page_num]
         for line in page.extract_text().split('\n'):
             if ":" in line:
-                if key: 
-                    file_path[key] = ' '.join(value_buffer.split()) 
-                    value_buffer = ''  
+                if key:
+                    value_buffer = value_buffer.replace(" ,", ",")
+                    file_path[key] = normalize_text(' '.join(value_buffer.split())) 
+                    value_buffer = ''
                 key, value = line.split(":", 1)
                 key = key.strip()
-                value_buffer = value.strip()  
+                value_buffer = value.strip()
                 counter += 1
             else:
                 value_buffer = value_buffer + ' ' + line.strip()
     if key:
-        file_path[key] = ' '.join(value_buffer.split())  
-
-
+        value_buffer = value_buffer.replace(" ,", ",")
+        file_path[key] = normalize_text(' '.join(value_buffer.split()))
 
 def process_export_instructions(instruction_text):
     global export_info, file_path
@@ -76,37 +73,13 @@ def process_export_instructions(instruction_text):
 
     return export_info
 
-
-
-# Function to print PDF content
-# def print_pdf(file_path):
-#     pdf_reader = PyPDF2.PdfReader(file_path)
-#     for page_num in range(len(pdf_reader.pages)):
-#         page = pdf_reader.pages[page_num]
-#         for line in page.extract_text().split('\n'):
-#             if line.strip():
-#                 print(line)
-
-# Function to print Word content
-def print_word(file_path):
-    word_read = docx.Document(file_path)
-    for paragraph in word_read.paragraphs:
-        text = paragraph.text.strip()
-        if text:
-            print(text)
-
-# Function to compare documents
 def compare_documents():
     global export_info, file_path
 
     if export_info:
-        print(export_info)
-        print(file_path)
-        
         for export_key, export_value in export_info.items():
-            match_found = False  # Reset match_found for each export key
+            match_found = False  
             for file_key, file_value in file_path.items():
-                # Normalize whitespace for comparison
                 normalized_export_value = ' '.join(export_value.split())
                 normalized_file_value = ' '.join(file_value.split())
                 
@@ -128,37 +101,47 @@ def compare_documents():
         if response:
             get_export_instructions()
 
+    # Display document content
+    display_document_content()
 
 def normalize_text(text):
     text = text.replace(" - ", "-")
     text = ' '.join(text.split())
     return text
 
+def display_document_content():
+    # Clear the current content of the text widgets
+    pdf_text_widget.delete('1.0', tk.END)
+    export_instructions_text_widget.delete('1.0', tk.END)
 
+    # PDF content
+    if file_path:
+        for key, value in file_path.items():
+            pdf_text_widget.insert(tk.END, f"{key}: {value}\n")
+
+    # Export Instructions
+    if export_instructions_selected:
+        for key, value in export_info.items():
+            export_instructions_text_widget.insert(tk.END, f"{key}: {value}\n")
 
 # Create the main window with tkinter
 root = tk.Tk()
 root.title("Label Approval Tool")
 
-# Function to select producer
 def select_producer(supplier):
     global producer_input
     producer_input = supplier
     print("now you have a producer:", producer_input)
 
-# Function to select product
 def select_product(item):
     global product_input
     product_input = item 
     print("now you have an item:", product_input)
 
-# Function to enable the export instructions button
 def enable_export_instructions_button():
     global export_instructions_button
     export_instructions_button.config(state=tk.NORMAL)
 
-
-# Create UI elements to upload and compare documents 
 upload_button = tk.Button(root, text="Upload Document", command=upload_file)
 export_instructions_button = tk.Button(root, text="Upload Export Instructions", command=get_export_instructions, state=tk.DISABLED)
 producers = ['Producer 1', 'Producer 2', 'Producer 3']  
@@ -171,6 +154,12 @@ product_var.set(products[0])
 producer_dropdown = tk.OptionMenu(root, producer_var, *producers, command=select_producer)
 product_dropdown = tk.OptionMenu(root, product_var, *products, command=select_product)
 compare_button = tk.Button(root, text="Compare Documents", command=lambda: compare_documents())
+
+# Text widgets for displaying document content
+pdf_text_widget = tk.Text(root, height=50, width=100)
+export_instructions_text_widget = tk.Text(root, height=50, width=100)
+pdf_text_widget.grid(row=4, column=0)
+export_instructions_text_widget.grid(row=4, column=1)
 
 # Place UI elements using grid
 upload_button.grid(row=0, column=0)
