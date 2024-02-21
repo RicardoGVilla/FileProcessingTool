@@ -1,3 +1,4 @@
+import difflib
 import tkinter as tk
 from tkinter import filedialog
 import docx
@@ -77,32 +78,33 @@ def compare_documents():
     global export_info, file_path
 
     if export_info:
+        print(export_info)
+        print(file_path)
         for export_key, export_value in export_info.items():
-            match_found = False  
-            for file_key, file_value in file_path.items():
-                normalized_export_value = ' '.join(export_value.split())
-                normalized_file_value = ' '.join(file_value.split())
-                
-                if export_key.lower() in file_key.lower():
-                    match_found = True
-                    if normalized_export_value == normalized_file_value:
-                        print(f"Key '{export_key}' matches with value '{export_value}' in both documents.")
-                    else:
-                        print(f"Key '{export_key}' matches but values do not match: Export Info: '{export_value}', File Path: '{file_value}'")
-                    break  
-            
-            if not match_found:
-                print(f"No matching key found for '{export_key}' between export label and export instructions.")
-                
-        if not match_found:
-            print("No matching key found between export label and export instructions.")
+            file_value = file_path.get(export_key.lower(), None)
+            if file_value:
+                # Normalize and compare the values
+                normalized_export_value = normalize_text(export_value)
+                normalized_file_value = normalize_text(file_value)
+
+                # Use difflib to compare and highlight differences
+                diff = difflib.ndiff([normalized_export_value], [normalized_file_value])
+                diff_text = '\n'.join(diff)
+
+                # Clear existing content in the diff text widget
+                diff_text_widget.delete('1.0', tk.END)
+
+                # Add diff text to the widget
+                diff_text_widget.insert(tk.END, diff_text)
+
+                print(f"Differences for '{export_key}':\n{diff_text}")
+            else:
+                print(f"No matching key found for '{export_key}' in the document.")
     else: 
         response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
         if response:
             get_export_instructions()
 
-    # Display document content
-    display_document_content()
 
 def normalize_text(text):
     text = text.replace(" - ", "-")
@@ -160,6 +162,11 @@ pdf_text_widget = tk.Text(root, height=50, width=100)
 export_instructions_text_widget = tk.Text(root, height=50, width=100)
 pdf_text_widget.grid(row=4, column=0)
 export_instructions_text_widget.grid(row=4, column=1)
+
+# Widget for displaying the text differences 
+diff_text_widget = tk.Text(root, height=50, width=100)
+diff_text_widget.grid(row=5, columnspan=2)
+
 
 # Place UI elements using grid
 upload_button.grid(row=0, column=0)
