@@ -74,37 +74,53 @@ def process_export_instructions(instruction_text):
 
     return export_info
 
+def highlight_difference(widget, start, end):
+    widget.tag_add("diff", start, end)
+    widget.tag_config("diff", background="yellow")
+
 def compare_documents():
     global export_info, file_path
 
     if export_info:
-        print(export_info)
-        print(file_path)
         for export_key, export_value in export_info.items():
-            file_value = file_path.get(export_key.lower(), None)
-            if file_value:
+            found_key = None
+            for file_key in file_path.keys():
+                if export_key.lower() in file_key.lower():
+                    found_key = file_key
+                    break
+
+            if found_key:
                 # Normalize and compare the values
                 normalized_export_value = normalize_text(export_value)
-                normalized_file_value = normalize_text(file_value)
+                export_instructions_text_widget.insert(tk.END, f"{export_key.upper()}: {normalized_export_value}\n\n")
 
-                # Use difflib to compare and highlight differences
-                diff = difflib.ndiff([normalized_export_value], [normalized_file_value])
-                diff_text = '\n'.join(diff)
+                normalized_file_value = normalize_text(file_path[found_key])
 
-                # Clear existing content in the diff text widget
-                diff_text_widget.delete('1.0', tk.END)
+                # Use difflib to find differences
+                diff = list(difflib.ndiff([normalized_export_value], [normalized_file_value]))
+                print(diff)
+                start_index = None
 
-                # Add diff text to the widget
-                diff_text_widget.insert(tk.END, diff_text)
+                for i, s in enumerate(diff):
+                    if s[0] == ' ':  # No difference
+                        continue
+                    elif s[0] == '-':  # Deletion (or change)
+                        if start_index is None:
+                            start_index = "1.0 + {} chars".format(i)
+                    elif s[0] == '+':  # Addition (or change)
+                        if start_index is not None:
+                            highlight_difference(pdf_text_widget, start_index, "1.0 + {} chars".format(i))
+                            start_index = None
 
-                print(f"Differences for '{export_key}':\n{diff_text}")
+                # If there's a change at the end
+                if start_index is not None:
+                    highlight_difference(pdf_text_widget, start_index, tk.END)
             else:
                 print(f"No matching key found for '{export_key}' in the document.")
     else: 
         response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
         if response:
             get_export_instructions()
-
 
 def normalize_text(text):
     text = text.replace(" - ", "-")
@@ -113,13 +129,7 @@ def normalize_text(text):
 
 def display_document_content():
     # Clear the current content of the text widgets
-    pdf_text_widget.delete('1.0', tk.END)
     export_instructions_text_widget.delete('1.0', tk.END)
-
-    # PDF content
-    if file_path:
-        for key, value in file_path.items():
-            pdf_text_widget.insert(tk.END, f"{key}: {value}\n")
 
     # Export Instructions
     if export_instructions_selected:
@@ -162,10 +172,6 @@ pdf_text_widget = tk.Text(root, height=50, width=100)
 export_instructions_text_widget = tk.Text(root, height=50, width=100)
 pdf_text_widget.grid(row=4, column=0)
 export_instructions_text_widget.grid(row=4, column=1)
-
-# Widget for displaying the text differences 
-diff_text_widget = tk.Text(root, height=50, width=100)
-diff_text_widget.grid(row=5, columnspan=2)
 
 
 # Place UI elements using grid
