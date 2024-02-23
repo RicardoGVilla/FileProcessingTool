@@ -95,6 +95,7 @@ def compare_documents():
                 export_instructions_text_widget.insert(tk.END, f"{export_key.upper()}: {normalized_export_value}\n\n")
 
                 normalized_file_value = normalize_text(file_path[found_key])
+                pdf_text_widget.insert(tk.END, f"{found_key.upper()}: {normalized_file_value}\n\n")
 
                 # Use difflib to find differences
                 diff = list(difflib.ndiff([normalized_export_value], [normalized_file_value]))
