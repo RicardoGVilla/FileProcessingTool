@@ -90,38 +90,40 @@ def compare_documents():
                     break
 
             if found_key:
-                # Normalize and compare the values
                 normalized_export_value = normalize_text(export_value)
                 export_instructions_text_widget.insert(tk.END, f"{export_key.upper()}: {normalized_export_value}\n\n")
 
                 normalized_file_value = normalize_text(file_path[found_key])
                 pdf_text_widget.insert(tk.END, f"{found_key.upper()}: {normalized_file_value}\n\n")
 
-                # Use difflib to find differences
                 diff = list(difflib.ndiff([normalized_export_value], [normalized_file_value]))
-                print(diff)
-                start_index = None
-
+                
+                # Initialize indices for highlighting
+                export_index = 1
+                file_index = 1
                 for i, s in enumerate(diff):
-                    if s[0] == ' ':  # No difference
-                        continue
-                    elif s[0] == '-':  # Deletion (or change)
-                        if start_index is None:
-                            start_index = "1.0 + {} chars".format(i)
-                    elif s[0] == '+':  # Addition (or change)
-                        if start_index is not None:
-                            highlight_difference(pdf_text_widget, start_index, "1.0 + {} chars".format(i))
-                            start_index = None
-
-                # If there's a change at the end
-                if start_index is not None:
-                    highlight_difference(pdf_text_widget, start_index, tk.END)
+                    if s[0] == ' ':
+                        export_index += 1
+                        file_index += 1
+                    elif s[0] == '-':
+                        # Highlight in export instructions
+                        start = f"{export_index}.{len(s) - 2}"
+                        export_index += 1
+                        end = f"{export_index}.0"
+                        highlight_difference(export_instructions_text_widget, start, end)
+                    elif s[0] == '+':
+                        # Highlight in pdf text
+                        start = f"{file_index}.{len(s) - 2}"
+                        file_index += 1
+                        end = f"{file_index}.0"
+                        highlight_difference(pdf_text_widget, start, end)
             else:
                 print(f"No matching key found for '{export_key}' in the document.")
     else: 
-        response = tk.messagebox.askyesno("No Export Instructions", "No export instructions found. Do you want to upload export instructions?")
+        response = tk.messagebox.askyesno("No Export Instructions", "Do you want to upload export instructions?")
         if response:
             get_export_instructions()
+
 
 def normalize_text(text):
     text = text.replace(" - ", "-")
