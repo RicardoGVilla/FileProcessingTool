@@ -88,7 +88,7 @@ def compare_documents():
                 if export_key.lower() in file_key.lower():
                     found_key = file_key
                     break
-
+           
             if found_key:
                 normalized_export_value = normalize_text(export_value)
                 export_instructions_text_widget.insert(tk.END, f"{export_key.upper()}: {normalized_export_value}\n\n")
@@ -98,25 +98,17 @@ def compare_documents():
 
                 diff = list(difflib.ndiff([normalized_export_value], [normalized_file_value]))
                 
-                # Initialize indices for highlighting
-                export_index = 1
+                print(diff)
+
                 file_index = 1
                 for i, s in enumerate(diff):
-                    if s[0] == ' ':
-                        export_index += 1
-                        file_index += 1
-                    elif s[0] == '-':
-                        # Highlight in export instructions
-                        start = f"{export_index}.{len(s) - 2}"
-                        export_index += 1
-                        end = f"{export_index}.0"
-                        highlight_difference(export_instructions_text_widget, start, end)
-                    elif s[0] == '+':
+                    if s.startswith('+'):
                         # Highlight in pdf text
-                        start = f"{file_index}.{len(s) - 2}"
-                        file_index += 1
-                        end = f"{file_index}.0"
+                        start = f"{file_index}.0"
+                        end = f"{file_index}.{len(s) - 2}"
                         highlight_difference(pdf_text_widget, start, end)
+                    elif s[0] == ' ':
+                        file_index += 1
             else:
                 print(f"No matching key found for '{export_key}' in the document.")
     else: 
