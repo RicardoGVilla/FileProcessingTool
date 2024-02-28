@@ -80,6 +80,7 @@ def highlight_difference(widget, start, end):
 
 def compare_documents():
     global export_info, file_path
+    counter = 0 
 
     if export_info:
         for export_key, export_value in export_info.items():
@@ -96,8 +97,22 @@ def compare_documents():
                 normalized_file_value = normalize_text(file_path[found_key])
                 pdf_text_widget.insert(tk.END, f"{found_key.upper()}: {normalized_file_value}\n\n")
 
-                diff = list(difflib.ndiff([normalized_export_value], [normalized_file_value]))
-                
+
+
+                # Split strings into lists of words
+                export_words = normalized_export_value.split()
+                file_words = normalized_file_value.split()
+
+                counter = counter + 1 
+
+
+                # print(export_words)
+                # print(file_words)
+                # print(counter)
+
+
+                # Use difflib to compare word by word
+                diff = list(difflib.ndiff(export_words, file_words))
                 print(diff)
 
                 file_index = 1
