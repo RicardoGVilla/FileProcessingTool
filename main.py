@@ -80,9 +80,9 @@ def highlight_difference(widget, start, end):
 
 def compare_documents():
     global export_info, file_path
-    counter = 0 
 
     if export_info:
+        
         for export_key, export_value in export_info.items():
             found_key = None
             for file_key in file_path.keys():
@@ -91,45 +91,45 @@ def compare_documents():
                     break
            
             if found_key:
+                line_index = 1
                 normalized_export_value = normalize_text(export_value)
                 export_instructions_text_widget.insert(tk.END, f"{export_key.upper()}: {normalized_export_value}\n\n")
 
                 normalized_file_value = normalize_text(file_path[found_key])
+    
                 pdf_text_widget.insert(tk.END, f"{found_key.upper()}: {normalized_file_value}\n\n")
-
-
+                line_index  = line_index + 2 
 
                 # Split strings into lists of words
                 export_words = normalized_export_value.split()
                 file_words = normalized_file_value.split()
 
-                counter = counter + 1 
-
-
-                # print(export_words)
-                # print(file_words)
-                # print(counter)
-
-
                 # Use difflib to compare word by word
                 diff = list(difflib.ndiff(export_words, file_words))
                 print(diff)
 
-                file_index = 1
+                start_index = 0 
+
                 for i, s in enumerate(diff):
+                    end_index = len(s)
+
                     if s.startswith('+'):
                         # Highlight in pdf text
-                        start = f"{file_index}.0"
-                        end = f"{file_index}.{len(s) - 2}"
-                        highlight_difference(pdf_text_widget, start, end)
-                    elif s[0] == ' ':
-                        file_index += 1
+                        # start = f"{line_index}.{start_index}"
+                        # end = f"{line_index}.{end_index}"
+                        # print(f"s: {s} with a start of {start} and an end of {end}")
+                        highlight_difference(pdf_text_widget, 5.0, 5.6)
+                        print(line_index)
+                    
+                start_index = len(s)
+
             else:
                 print(f"No matching key found for '{export_key}' in the document.")
     else: 
         response = tk.messagebox.askyesno("No Export Instructions", "Do you want to upload export instructions?")
         if response:
             get_export_instructions()
+
 
 
 def normalize_text(text):
