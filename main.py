@@ -66,6 +66,7 @@ def process_export_instructions(instruction_text):
         "Importer": "importer",
         "Lot Number": "lot"
     }
+
     for paragraph in word_doc.paragraphs:
         for line in paragraph.text.split('\n'): 
             if ":" in line:
@@ -90,6 +91,8 @@ def compare_documents():
             get_export_instructions()
         return
     
+    display_document_content()
+
     line_index = 1 
 
     for export_key, export_value in export_info.items():
@@ -115,21 +118,24 @@ def process_differences(diff, export_key, file_value, line_number):
       
      # Insert the key and its corresponding value from the document before highlighting differences
     pdf_text_widget.insert(tk.END, f"{export_key.upper()}: {file_value}\n\n")
+    
+    current_char_index = len(export_key) + 1
 
-    word = ""
     for word in diff:
+        if word.startswith("-"):
+         continue  
+           
+        word_length = len(word)
+        current_char_index += word_length
         
         if word.startswith("+ "):
-            highlight_word = word[2:]
-            start_index = f"{line_number}.{len(export_key) + 1}"
-            end_index = f"{line_number}.{20}"
+            start_index = f"{line_number}.{current_char_index - word_length}"
+            end_index = f"{line_number}.{current_char_index}"
             
              # Apply highlight using calculated positions
             pdf_text_widget.tag_add("highlight" , start_index, end_index)
             pdf_text_widget.tag_config("highlight", background="yellow")
         
-
-
 
 
 def normalize_text(text):
@@ -144,7 +150,7 @@ def display_document_content():
     # Export Instructions
     if export_instructions_selected:
         for key, value in export_info.items():
-            export_instructions_text_widget.insert(tk.END, f"{key}: {value}\n")
+            export_instructions_text_widget.insert(tk.END, f"{key.upper()}: {value.upper()}\n")
 
 # Create the main window with tkinter
 root = tk.Tk()
