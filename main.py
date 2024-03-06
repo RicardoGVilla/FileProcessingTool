@@ -90,6 +90,8 @@ def compare_documents():
             get_export_instructions()
         return
     
+    line_index = 1 
+
     for export_key, export_value in export_info.items():
 
         found_key = next((file_key for file_key in file_path.keys() if export_key.lower() in file_key.lower()), None)
@@ -103,28 +105,31 @@ def compare_documents():
             diff = list(difflib.ndiff(normalized_export_value.split(), normalized_file_value.split()))
             
             # Process the differences for highlighting
-            process_differences(diff, export_key, normalized_file_value)
+            process_differences(diff, export_key, normalized_file_value, line_index)
+            line_index = line_index + 2 
         else:
             print(f"No matching key found for '{export_key}' in the document.")
         
         
-def process_differences(diff, export_key, file_value):
-    line_number = 1  # Assuming comparison starts at the first line of the widget for simplicity
-    word_index = 1   # Start at the first word
-    
+def process_differences(diff, export_key, file_value, line_number):
+      
      # Insert the key and its corresponding value from the document before highlighting differences
     pdf_text_widget.insert(tk.END, f"{export_key.upper()}: {file_value}\n\n")
 
+    word = ""
     for word in diff:
+        
         if word.startswith("+ "):
             highlight_word = word[2:]
-            start_index = f"{line_number}.{word_index}"
-            end_index = f"{line_number}.{word_index + len(highlight_word)}"
-             # Highlight the added word in the text widget
-            pdf_text_widget.tag_add("highlight", start_index, end_index)
-            pdf_text_widget.tag_config("highlight", background="yellow")
-           
+            start_index = f"{line_number}.{len(export_key) + 1}"
+            end_index = f"{line_number}.{20}"
             
+             # Apply highlight using calculated positions
+            pdf_text_widget.tag_add("highlight" , start_index, end_index)
+            pdf_text_widget.tag_config("highlight", background="yellow")
+        
+
+
 
 
 def normalize_text(text):
