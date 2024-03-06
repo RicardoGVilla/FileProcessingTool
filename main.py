@@ -2,7 +2,7 @@ import difflib
 import tkinter as tk
 from tkinter import filedialog
 import docx
-import PyPDF2
+import fitz
 
 # Initialize variables
 file_path = None
@@ -29,25 +29,29 @@ def get_export_instructions():
 
 def process_document(file):
     global file_path
-    pdf_doc = PyPDF2.PdfReader(file)
-    counter = 0
-    file_path = {}
+    file_path = {}  # Reset file_path variable
+    with fitz.open(file) as pdf_doc:  # Open PDF file using fitz
+        for page_num in range(len(pdf_doc)):
+            page = pdf_doc.load_page(page_num)  # Load each page
+            text = page.get_text()  # Extract text from the page
+            print(text)
+            process_text(text)  # Process extracted text
+
+def process_text(text):
+    global file_path
     key = None
     value_buffer = ''
-    for page_num in range(len(pdf_doc.pages)):
-        page = pdf_doc.pages[page_num]
-        for line in page.extract_text().split('\n'):
-            if ":" in line:
-                if key:
-                    value_buffer = value_buffer.replace(" ,", ",")
-                    file_path[key] = normalize_text(' '.join(value_buffer.split())) 
-                    value_buffer = ''
-                key, value = line.split(":", 1)
-                key = key.strip()
-                value_buffer = value.strip()
-                counter += 1
-            else:
-                value_buffer = value_buffer + ' ' + line.strip()
+    for line in text.split('\n'):
+        if ":" in line:
+            if key:
+                value_buffer = value_buffer.replace(" ,", ",")
+                file_path[key] = normalize_text(' '.join(value_buffer.split())) 
+                value_buffer = ''
+            key, value = line.split(":", 1)
+            key = key.strip()
+            value_buffer = value.strip()
+        else:
+            value_buffer = value_buffer + ' ' + line.strip()
     if key:
         value_buffer = value_buffer.replace(" ,", ",")
         file_path[key] = normalize_text(' '.join(value_buffer.split()))
@@ -62,10 +66,8 @@ def process_export_instructions(instruction_text):
         "Importer": "importer",
         "Lot Number": "lot"
     }
-    counter = 0 
     for paragraph in word_doc.paragraphs:
         for line in paragraph.text.split('\n'): 
-            counter = counter + 1
             if ":" in line:
                 key, value = line.split(":", 1)
                 key = key.strip()
@@ -79,57 +81,50 @@ def highlight_difference(widget, start, end):
     widget.tag_config("diff", background="yellow")
 
 def compare_documents():
-    global export_info, file_path
+    global export_info, file_path, pdf_text_widget, export_instructions_text_widget
 
-    if export_info:
-        
-        for export_key, export_value in export_info.items():
-            found_key = None
-            for file_key in file_path.keys():
-                if export_key.lower() in file_key.lower():
-                    found_key = file_key
-                    break
-           
-            if found_key:
-                line_index = 1
-                normalized_export_value = normalize_text(export_value)
-                export_instructions_text_widget.insert(tk.END, f"{export_key.upper()}: {normalized_export_value}\n\n")
-
-                normalized_file_value = normalize_text(file_path[found_key])
-    
-                pdf_text_widget.insert(tk.END, f"{found_key.upper()}: {normalized_file_value}\n\n")
-                line_index  = line_index + 2 
-
-                # Split strings into lists of words
-                export_words = normalized_export_value.split()
-                file_words = normalized_file_value.split()
-
-                # Use difflib to compare word by word
-                diff = list(difflib.ndiff(export_words, file_words))
-                print(diff)
-
-                start_index = 0 
-
-                for i, s in enumerate(diff):
-                    end_index = len(s)
-
-                    if s.startswith('+'):
-                        # Highlight in pdf text
-                        # start = f"{line_index}.{start_index}"
-                        # end = f"{line_index}.{end_index}"
-                        # print(f"s: {s} with a start of {start} and an end of {end}")
-                        highlight_difference(pdf_text_widget, 5.0, 5.6)
-                        print(line_index)
-                    
-                start_index = len(s)
-
-            else:
-                print(f"No matching key found for '{export_key}' in the document.")
-    else: 
+    #Check for export instruction
+    if not export_info:
         response = tk.messagebox.askyesno("No Export Instructions", "Do you want to upload export instructions?")
         if response:
             get_export_instructions()
+        return
+    
+    for export_key, export_value in export_info.items():
 
+        found_key = next((file_key for file_key in file_path.keys() if export_key.lower() in file_key.lower()), None)
+
+        if found_key:
+            # Prepare text for comparison
+            normalized_export_value = normalize_text(export_value)
+            normalized_file_value = normalize_text(file_path[found_key])
+
+            # Compare the values
+            diff = list(difflib.ndiff(normalized_export_value.split(), normalized_file_value.split()))
+            
+            # Process the differences for highlighting
+            process_differences(diff, export_key, normalized_file_value)
+        else:
+            print(f"No matching key found for '{export_key}' in the document.")
+        
+        
+def process_differences(diff, export_key, file_value):
+    line_number = 1  # Assuming comparison starts at the first line of the widget for simplicity
+    word_index = 1   # Start at the first word
+    
+     # Insert the key and its corresponding value from the document before highlighting differences
+    pdf_text_widget.insert(tk.END, f"{export_key.upper()}: {file_value}\n\n")
+
+    for word in diff:
+        if word.startswith("+ "):
+            highlight_word = word[2:]
+            start_index = f"{line_number}.{word_index}"
+            end_index = f"{line_number}.{word_index + len(highlight_word)}"
+             # Highlight the added word in the text widget
+            pdf_text_widget.tag_add("highlight", start_index, end_index)
+            pdf_text_widget.tag_config("highlight", background="yellow")
+           
+            
 
 
 def normalize_text(text):
