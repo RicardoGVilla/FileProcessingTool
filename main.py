@@ -156,22 +156,13 @@ def display_document_content():
 root = tk.Tk()
 root.title("Label Approval Tool")
 
-def select_producer(supplier):
-    global producer_input
-    producer_input = supplier
-    print("now you have a producer:", producer_input)
-
-def select_product(item):
-    global product_input
-    product_input = item 
-    print("now you have an item:", product_input)
 
 def enable_export_instructions_button():
     global export_instructions_button
     export_instructions_button.config(state=tk.NORMAL)
 
-upload_button = tk.Button(root, text="Upload Document", command=upload_file)
-export_instructions_button = tk.Button(root, text="Upload Export Instructions", command=get_export_instructions, state=tk.DISABLED)
+upload_button = tk.Button(root, text="Upload Label", command=upload_file)
+export_instructions_button = tk.Button(root, text="Upload Export Instructions", command=get_export_instructions)
 producers = ['Producer 1', 'Producer 2', 'Producer 3']  
 products = ['Product A', 'Product B', 'Product C']  
 export_instructions = {}
@@ -179,8 +170,6 @@ producer_var = tk.StringVar(root)
 producer_var.set(producers[0])
 product_var = tk.StringVar(root)
 product_var.set(products[0])
-producer_dropdown = tk.OptionMenu(root, producer_var, *producers, command=select_producer)
-product_dropdown = tk.OptionMenu(root, product_var, *products, command=select_product)
 compare_button = tk.Button(root, text="Compare Documents", command=lambda: compare_documents())
 
 # Text widgets for displaying document content
@@ -193,8 +182,6 @@ export_instructions_text_widget.grid(row=4, column=1)
 # Place UI elements using grid
 upload_button.grid(row=0, column=0)
 export_instructions_button.grid(row=1, column=0)
-producer_dropdown.grid(row=2, column=0)
-product_dropdown.grid(row=2, column=1)
 compare_button.grid(row=3, column=0)
 
 # Start the Tkinter main loop
