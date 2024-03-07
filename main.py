@@ -119,23 +119,28 @@ def process_differences(diff, export_key, file_value, line_number):
      # Insert the key and its corresponding value from the document before highlighting differences
     pdf_text_widget.insert(tk.END, f"{export_key.upper()}: {file_value}\n\n")
     
-    current_char_index = len(export_key) + 1
+    current_char_index = len(export_key)
 
     for word in diff:
         if word.startswith("-"):
          continue  
-           
-        word_length = len(word)
-        current_char_index += word_length
-        
+
         if word.startswith("+ "):
+            print(word)
+            print(export_key)
+            word_length = len(word) - 1
+            current_char_index += word_length
             start_index = f"{line_number}.{current_char_index - word_length}"
             end_index = f"{line_number}.{current_char_index}"
-            
+            print(end_index)
+
              # Apply highlight using calculated positions
             pdf_text_widget.tag_add("highlight" , start_index, end_index)
             pdf_text_widget.tag_config("highlight", background="yellow")
-        
+        else:
+            word_length = len(word)
+            current_char_index += word_length
+            continue
 
 
 def normalize_text(text):
